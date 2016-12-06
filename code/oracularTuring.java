@@ -26,7 +26,7 @@ import Jama.*;
 public class oracularTuring{
 
     // Public variables
-    public static int   nHLayers    = 4;
+    public static int   nHLayers   = 4;
     public static int[] widthLayer = {3, 5, 7, 4, 1}; // Includes input layer
 
     /*
@@ -106,7 +106,7 @@ public class oracularTuring{
     private static double outputLayer(double[][] w, double[] x, char activation){
         Matrix W    = new Matrix(w);
         Matrix b    = new Matrix(addBias(x), 1).transpose();
-        double pred = W.times(b).get(1, 1);
+        double pred = W.times(b).get(0, 0);
         if(activation == 'l'){
             return Math.log(pred);
         }else{
@@ -127,17 +127,42 @@ public class oracularTuring{
 
     /*
      * ---------------------------------------------
+     * Run the neural net activation option
+     * ---------------------------------------------
+     * layers = array of layer's weights
+     * x      = observation
+     */
+    private static double runNet(Matrix[] layers, double[] x, char activation){
+        double[] hiddenOutput = hiddLayer(layers[0].getArray(), x, activation);
+        for(int i = 1; i < (nHLayers - 1); i++){
+            hiddenOutput = hiddLayer(layers[i].getArray(), hiddenOutput, activation);
+        }
+        return outputLayer(layers[nHLayers - 1].getArray(), hiddenOutput, activation);
+    }
+
+    /*
+     * ---------------------------------------------
+     * Run the neural net default logistic
+     * ---------------------------------------------
+     * layers = array of layer's weights
+     * x      = observation
+     */
+    private static double runNet(Matrix[] layers, double[] x){
+        double[] hiddenOutput = hiddLayer(layers[0].getArray(), x, 'l');
+        for(int i = 1; i < (nHLayers - 1); i++){
+            hiddenOutput = hiddLayer(layers[i].getArray(), hiddenOutput, 'l');
+        }
+        return outputLayer(layers[nHLayers - 1].getArray(), hiddenOutput, 'l');
+    }
+
+    /*
+     * ---------------------------------------------
      * MAIN
      * ---------------------------------------------
      */
     public static void main(String args[]){
-        Matrix   W1 = Matrix.random(5, 4);
-        Matrix   W2 = Matrix.random(5, 4);
-        double[] x  = {.1, .1, .1};
-        double[] y  = hiddLayer(W1.getArray(), x);
         Matrix[] layers = initW();
-        for(int i = 0; i < layers.length; i++){
-            System.out.println("Número de filas: " + layers[i].getRowDimension() + " | Número de columnas: " + layers[i].getColumnDimension());
-        }
+        double[] x      = {.1, .1, .1};
+        System.out.println("Network Output: " + runNet(layers, x, 't'));
     }
 }
