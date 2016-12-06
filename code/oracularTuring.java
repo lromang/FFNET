@@ -31,13 +31,13 @@ public class oracularTuring{
      * ---------------------------------------------
      * x = observation
      */
-    private static double[][] addBias(double[][] x){
-        int rowLength = x[0].length;
-        double[][] newX = new double[0][rowLength + 1];
+    private static double[] addBias(double[] x){
+        int rowLength = x.length;
+        double[] newX = new double[rowLength + 1];
         for(int i = 0; i < rowLength; i++){
-            newX[0][i] = x[0][i];
+            newX[i] = x[i];
         }
-        newX[0][rowLength + 1] = 1;
+        newX[rowLength] = 1;
         return newX;
     }
 
@@ -48,30 +48,33 @@ public class oracularTuring{
      * w = weight matrix
      * x = observation
      */
-    private static Matrix actLayer(double[][] w, double[][] x){
+    private static Matrix actLayer(double[][] w, double[] x){
         Matrix W        = new Matrix(w);
-        Matrix b        = new Matrix(x);
+        Matrix b        = new Matrix(addBias(x), 1).transpose();
         Matrix H        = W.times(b);
-        double[] hidden = new double[H.getRowDimension()];
+        // Number of hidden layers
+        int n_hidden    = H.getRowDimension();
+        double[] hidden = new double[n_hidden];
         // Apply tanh
-        for(int i = 0; i < H.getRowDimension(); i++){
+        for(int i = 0; i < n_hidden; i++){
             hidden[i] = Math.tanh(H.get(i, 0));
         }
         return H;
     }
 
     public static void main(String args[]){
-        double[][] A   = {{.1, .2, .3, .4}, {.4, .5, .6, .7}, {.7, .8, .9, .9}};
-        double[][] b   = {{.1, .2, .3}};
-        double[][] one = {{1, 1, 1}};
-        Matrix oneM    = new Matrix(one);
-        Matrix bM      = new Matrix(b);
+        double[][] A   = {{.1, .2, .3, .1}, {.4, .5, .6, .2}, {.7, .8, .9, .3}, {.5, .5, .8, .2}};
+        double[] b     = {.1, .2, .3};
+        double[] one   = {1, 1, 1};
+        Matrix oneM    = new Matrix(one, 1);
+        Matrix bM      = new Matrix(b, 1).transpose();
         Matrix AM      = new Matrix(A);
-        //        Matrix H       = actLayer(A, b);
+        // Matrix AB      = AM.times(bM);
+        Matrix H       = actLayer(A, b);
         System.out.println("Dimension columnas b");
-        System.out.println(AM.getColumnDimension());
+        System.out.println(H.getColumnDimension());
         System.out.println("Dimension renglones b");
-        System.out.println(AM.getRowDimension());
+        System.out.println(H.getRowDimension());
 
     }
 }
