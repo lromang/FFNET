@@ -25,9 +25,10 @@ import Jama.*;
 
 public class oracularTuring{
 
-    // Public variables
-    public static int   nHLayers   = 4;
-    public static int[] widthLayer = {3, 5, 7, 4, 1}; // Includes input layer
+    /* Public variables
+     * public static int   nHLayers   = 4;
+     * public static int[] widthLayer = {3, 5, 7, 4, 1}; // Includes input and output layer
+    */
 
     /*
      * ---------------------------------------------
@@ -35,13 +36,29 @@ public class oracularTuring{
      * ---------------------------------------------
      * x = observation
      */
-    private static Matrix[] initW(){
+    private static Matrix[] initW(int nHLayers, int[] widthLayer){
         Matrix[] layerWeights = new Matrix[nHLayers];
         for(int i = 0; i < nHLayers; i++){
             layerWeights[i] = Matrix.random(widthLayer[i + 1], widthLayer[i] + 1);
         }
         return layerWeights;
     }
+
+    /*
+     * ---------------------------------------------
+     * Generate initial observation (Should be
+     * provided by Turing's Machine history)
+     * ---------------------------------------------
+     * x = observation
+     */
+    private static double[] initX(int inputLayerDim){
+        double[] x = new double[inputLayerDim];
+        for(int i = 0; i < inputLayerDim; i++){
+            x[i]  = Math.random();
+        }
+        return x;
+    }
+
 
     /*
      * ---------------------------------------------
@@ -134,10 +151,10 @@ public class oracularTuring{
      */
     private static double runNet(Matrix[] layers, double[] x, char activation){
         double[] hiddenOutput = hiddLayer(layers[0].getArray(), x, activation);
-        for(int i = 1; i < (nHLayers - 1); i++){
+        for(int i = 1; i < (layers.length - 1); i++){
             hiddenOutput = hiddLayer(layers[i].getArray(), hiddenOutput, activation);
         }
-        return outputLayer(layers[nHLayers - 1].getArray(), hiddenOutput, activation);
+        return outputLayer(layers[layers.length - 1].getArray(), hiddenOutput, activation);
     }
 
     /*
@@ -149,10 +166,10 @@ public class oracularTuring{
      */
     private static double runNet(Matrix[] layers, double[] x){
         double[] hiddenOutput = hiddLayer(layers[0].getArray(), x, 'l');
-        for(int i = 1; i < (nHLayers - 1); i++){
+        for(int i = 1; i < (layers.length - 1); i++){
             hiddenOutput = hiddLayer(layers[i].getArray(), hiddenOutput, 'l');
         }
-        return outputLayer(layers[nHLayers - 1].getArray(), hiddenOutput, 'l');
+        return outputLayer(layers[layers.length - 1].getArray(), hiddenOutput, 'l');
     }
 
     /*
@@ -161,8 +178,28 @@ public class oracularTuring{
      * ---------------------------------------------
      */
     public static void main(String args[]){
-        Matrix[] layers = initW();
-        double[] x      = {.1, .1, .1};
+        Scanner scanner  = new Scanner(System.in);
+        System.out.println("===========================================");
+        System.out.println("========== Oracle Turing Machine ==========");
+        System.out.println("===========================================\n");
+        System.out.println("\nPlease enter the number of Hidden Layers of the Net: ");
+        int nHLayers     = Integer.parseInt(scanner.next());
+        int[] widthLayer = new int[nHLayers + 2];
+        // Fill in each layer.
+        // INPUT LAYER
+        System.out.println("\nPlease enter dimension of the input  layer: ");
+        widthLayer[0] =  Integer.parseInt(scanner.next());
+        // HIDDEN LAYERS
+        for(int i = 1; i < nHLayers; i++){
+            System.out.println("\nPlease enter dimension of the hidden layer " + i + " :");
+            widthLayer[i] =  Integer.parseInt(scanner.next());
+        }
+        // Output Layer always 1
+        widthLayer[nHLayers] = 1;
+
+        // Generate weights
+        Matrix[] layers = initW(nHLayers, widthLayer);
+        double[] x      = initX(widthLayer[0]);
         System.out.println("Network Output: " + runNet(layers, x, 't'));
     }
 }
