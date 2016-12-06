@@ -63,14 +63,10 @@ public class oracularTuring{
     }
 
     public static void main(String args[]){
-        double[][] A   = {{.1, .2, .3, .1}, {.4, .5, .6, .2}, {.7, .8, .9, .3}, {.5, .5, .8, .2}};
-        double[] b     = {.1, .2, .3};
-        double[] one   = {1, 1, 1};
-        Matrix oneM    = new Matrix(one, 1);
-        Matrix bM      = new Matrix(b, 1).transpose();
-        Matrix AM      = new Matrix(A);
+        Matrix A = Matrix.random(5, 3);
+        Matrix b = Matrix.random(1, 3);
         // Matrix AB      = AM.times(bM);
-        Matrix H       = actLayer(A, b);
+        Matrix H = actLayer(A.getArray(), b.getArray()[][0]);
         System.out.println("Dimension columnas b");
         System.out.println(H.getColumnDimension());
         System.out.println("Dimension renglones b");
