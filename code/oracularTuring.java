@@ -52,10 +52,10 @@ public class oracularTuring{
      * ---------------------------------------------
      * x = observation
      */
-    private static double[] initX(int inputLayerDim){
+    private static double[] initX(int inputLayerDim, Random randGen){
         double[] x = new double[inputLayerDim];
         for(int i = 0; i < inputLayerDim; i++){
-            x[i]  = Math.random();
+            x[i]  = showRandomInteger(0, 1, randGen);//Math.random();//
         }
         return x;
     }
@@ -67,11 +67,11 @@ public class oracularTuring{
      * ---------------------------------------------
      * x = observation
      */
-    private static double[][] initObs(int totObs, int inputLayerDim){
+    private static double[][] initObs(int totObs, int inputLayerDim, Random randGen){
         double[][] X = new double[totObs][inputLayerDim];
         for(int i = 0; i < totObs; i++){
             for(int j = 0; j < inputLayerDim; j++)
-            X[i][j]  = Math.random();
+                X[i][j]  = showRandomInteger(0, 1, randGen); //Math.random(); //
         }
         return X;
     }
@@ -234,8 +234,8 @@ public class oracularTuring{
     private static Matrix[] runNetBackProp(Matrix[] layers, double[] x, int ToL, double outputValue, double learnRate){
         Matrix  W1 = layers[0];
         Matrix  W2 = layers[1];
-        double[] y = hiddLayer(W1.getArray(),  x, 'l');
-        double   z = outputLayer(W2.getArray(), y, 'l');
+        double[] y = hiddLayer(W1.getArray(),  x, 't');
+        double   z = outputLayer(W2.getArray(), y, 't');
         double[] x_new = addBias(x);
         double[] y_new = addBias(y);
         for(int k = 0; k < ToL; k++){
@@ -292,10 +292,12 @@ public class oracularTuring{
         // Initial Weights
         Matrix[] layers  = initW(nHLayers, widthLayer);
         // Initial Evaluation
-        double objective = runAllNet(outputs, layers, X, 't');
+        double objective    = runAllNet(outputs, layers, X, 't');
+        double auxObjective = objective;
         // ToL  = (int)Math.sqrt(objective);
         System.out.println("sumSquares = " + objective + " | epoch = " + epochs);
-        while(epochs < TotEpochs){
+        while(epochs < TotEpochs && auxObjective >= objective){
+            auxObjective = objective;
             obs = showRandomInteger(0, (outputs.length - 1), randGen);
             x   = X[obs];
             // Run Back Propagation
@@ -334,16 +336,34 @@ public class oracularTuring{
      * ---------------------------------------------------------------
      */
 
-    public static int[][] population = new int[1][1024]; // Length of Turing Machine
-
+    public static int[][] population       = new int[1][1024]; // Length of Turing Machine
+    public static int[][] oraclePopulation = new int[1][4096]; // Turing Machine with Oracle
     // Generate Turing Machine
     public static void popGeneration(Random randGen){
+        // TAPE
         for(int i = 0; i < population.length; i++){
             for(int j = 0; j < population[0].length; j ++){
                 population[i][j] = randGen.nextInt(2);
             }
         }
+        // Oracle TAPE
+        for(int i = 0; i < oraclePopulation.length; i++){
+            for(int j = 0; j < oraclePopulation[0].length; j ++){
+                oraclePopulation[i][j] = randGen.nextInt(2);
+            }
+        }
+
     }
+
+    // Generate Tape
+    public static int[] tapeGeneration(int tapeLength, Random randGen){
+        int[] tape = new int[tapeLength];
+        for(int j = 0; j < tapeLength; j ++){
+            tape[j] = randGen.nextInt(2);
+        }
+        return tape;
+    }
+
 
     public static double decode(int[] code){
         double decode = 0;
@@ -362,24 +382,35 @@ public class oracularTuring{
     }
 
 
-    public static int[] turingMachine(int maxIters, int nStates, int tapeLength, Random randGen, boolean verbose){
+    public static int[] turingMachine(int maxIters, int nStates, int tapeLength, Random randGen, boolean verbose, Matrix[] layers){
+        // Define Machines
         int[] machineEncode  = population[0];
-        int[] tape            = new int[tapeLength + 1];  // Tape.
-        int   position = (int) ((tapeLength + 1) / 2);  // Track position in tape.
-        Set<Integer> visitedStates = new HashSet<Integer>();
+        int[] oracleEncode   = oraclePopulation[0];
+        // Define Tape
+        int[] tape           = tapeGeneration(tapeLength + 1, randGen); //new int[tapeLength + 1];  // Tape.
+        int[] oracleTape     = tapeGeneration(tapeLength + 1, randGen); //new int[tapeLength + 1];
+        // Initial position
+        int position       = (int) ((tapeLength + 1) / 2);  // Track position in tape.
+        int oraclePosition = (int) ((tapeLength + 1) / 2);  // Track position in tape.
+        int nextValue;
+        // Track visited states
+        Set<Integer> visitedStates       = new HashSet<Integer>();
+        Set<Integer> oracleVisitedStates = new HashSet<Integer>();
         int   k        = 0;    // Operation counter
         nStates = (int)(Math.log(nStates) / Math.log(2)); // pass to log 2
-        int[] state    = new int[nStates]; // state
-        int next_state = (int)decode(state);
+        int[] state           = new int[nStates]; // state
+        int[] oracleState     = new int[nStates]; // state
+        int next_state        = (int)decode(state);
+        int oracle_next_state = (int)decode(oracleState);
         if(verbose == true){
             System.out.print("\n==================================================================");
             System.out.print("\nMachine Simulation ");
             System.out.println("\n==================================================================");
         }
-        while(k < maxIters && position < tape.length && position > 1){
+        while(k < maxIters && position < tape.length && position > 1 && oraclePosition < oracleTape.length && oraclePosition > 1){
             if(verbose == true){
                 System.out.println("\n ========================================= ");
-                System.out.println("\n Machine = [" + 0 +"]");
+                // System.out.println("\n Machine = [" + 0 +"]");
                 System.out.println("\n ITER = " + k);
                 System.out.println("\n Tape Position = " + position);
                 System.out.print("\n Current Instruction = [" + next_state/8  + "]: ");
@@ -387,37 +418,67 @@ public class oracularTuring{
             if(tape[position] == 1){
                 next_state = next_state*2;
             }
+            // ORACLE NEXT STATE DEFINITION
+            double[] observation = new double[1];
+            double auxObs  = (double)oracleTape[oraclePosition];
+            observation[0] = auxObs;
+            nextValue      = (-1) * (int)runNet(layers, observation, 'l'); // NOTE: Only predicting with previous value!
+            if(oracleTape[oraclePosition] == 1 && nextValue == 1 ){
+                oracle_next_state = oracle_next_state*2;
+            }else if(oracleTape[oraclePosition] == 1 && nextValue == 1){
+                oracle_next_state = oracle_next_state*3;
+            }else if(oracleTape[oraclePosition] == 0 && nextValue == 1){
+                oracle_next_state = oracle_next_state*4;
+            }
             // Add visited states.
             visitedStates.add(next_state);
+            oracleVisitedStates.add(oracle_next_state);
             int i = 0;
             while(i < nStates){
                 state[i] = machineEncode[next_state + i];
                 i++;
             }
+            i = 0;
+            while(i < nStates){
+                oracleState[i] = oracleEncode[oracle_next_state + i];
+                i++;
+            }
             if(verbose == true){
                 System.out.println(machineEncode[next_state + (i + 1)] + "" + machineEncode[next_state + (i + 2)]);
+                System.out.println("\n Oracle Tape Position = " + oraclePosition);
+                System.out.println("\n Oracle Tape Predicted value = " + nextValue);
+                System.out.print("\n Oracle Current Instruction = [" + oracle_next_state/8  + "]: ");
+                System.out.println(oracleEncode[oracle_next_state + (i + 1)] + "" + oracleEncode[oracle_next_state + (i + 2)]);
             }
             // Start reading code
             next_state = ((int)decode(state)) * 8;
+            oracle_next_state = ((int)decode(oracleState)) * 8;
 
             if(verbose == true){
                 System.out.println("\n Next State = " + next_state/8);
+                System.out.println("\n Oracle Next State = " + oracle_next_state/8);
             }
             // Write in tape.
-            tape[position] = machineEncode[next_state + i + 1];
+            tape[position]             = machineEncode[next_state + i + 1];
+            oracleTape[oraclePosition] = oracleEncode[oracle_next_state + i + 1];
             if(verbose == true){
                 System.out.println("\n Wrote = " + tape[position]);
+                System.out.println("\n Oracle Wrote = " + oracleTape[position]);
             }
             // Move position.
-            position = position + (int)Math.pow(-1, machineEncode[next_state + i + 2]);
+            position       = position       + (int)Math.pow(-1, machineEncode[next_state + i + 2]);
+            oraclePosition = oraclePosition + (int)Math.pow(-1, oracleEncode[oracle_next_state + i + 2]);
             if(verbose == true){
                 System.out.println("\n Move = " + position);
+                System.out.println("\n Oracle Move = " + oraclePosition);
             }
             // Increase counter.
             k++;
             if(verbose == true){
                 System.out.println("\n Tape: ");
                 printTape(tape);
+                System.out.println("\n Oracle Tape: ");
+                printTape(oracleTape);
             }
         }
         /*if(visitedStates.size() < minVisitStates){
@@ -448,8 +509,9 @@ public class oracularTuring{
         int[] widthLayer = new int[nHLayers + 2]; // This includes input
         // Fill in each layer.
         // INPUT LAYER
-        System.out.println("\nPlease enter dimension of the input  layer: ");
-        widthLayer[0] =  Integer.parseInt(scanner.next());
+        //System.out.println("\nPlease enter dimension of the input  layer: ");
+        //widthLayer[0] =  Integer.parseInt(scanner.next());
+        widthLayer[0] = 1;
         // HIDDEN LAYERS
         for(int i = 1; i < (nHLayers + 1); i++){
             System.out.println("\nPlease enter dimension of the hidden layer " + i + " :");
@@ -460,8 +522,8 @@ public class oracularTuring{
         // Generate weights
         int nObservations = 50; // This should be given by the Turing Machine.
         Matrix[] layers  = initW(nHLayers, widthLayer);
-        double[] outputs = initX(nObservations);
-        double[][] X     = initObs(nObservations, widthLayer[0]);
+        double[] outputs = initX(nObservations, randGen);
+        double[][] X     = initObs(nObservations, widthLayer[0], randGen);
         // Get Tolerance
         System.out.println("\nPlease enter the maximum number of epochs: ");
         int TotEpochs = Integer.parseInt(scanner.next());
@@ -469,9 +531,9 @@ public class oracularTuring{
         System.out.println("\nPlease enter the learning rate: ");
         double learningRate = Double.parseDouble(scanner.next());
         // Run Neural Net
-        execLearning(X, outputs, learningRate, nHLayers, widthLayer, randGen, TotEpochs);
+        Matrix[] outputLayers = execLearning(X, outputs, learningRate, nHLayers, widthLayer, randGen, TotEpochs);
         // Run Turing Machine
         popGeneration(randGen);
-        turingMachine(100, 64, 100, randGen, true);
+        turingMachine(100, 64, 100, randGen, true, outputLayers);
     }
 }
