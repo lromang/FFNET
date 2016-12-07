@@ -176,16 +176,16 @@ public class oracularTuring{
 
     /*
      * ---------------------------------------------
-     * Run the neural net activation option on all
+     * Evaluate the neural net activation option on all
      * of the dataset.
      * ---------------------------------------------
      * layers = array of layer's weights
      * x      = observation
      */
-    private static double[] runAllNet(Matrix[] layers, double[][] x, char activation){
+    private static double[] runAllNet(double[] output, Matrix[] layers, double[][] x, char activation){
         double[] resNet = new double[x[0].length];
         for(int i = 0; i < resNet.length; i++){
-            resNet[i] = runNet(layers, x[i], activation);
+            resNet[i] = (output[i] - runNet(layers, x[i], activation))*(output[i] - runNet(layers, x[i], activation));
         }
         return resNet;
     }
@@ -224,6 +224,7 @@ public class oracularTuring{
         double[] y_new = addBias(y);
         for(int k = 0; k < ToL; k++){
             System.out.println("|pred - val|^2 = " + (z - outputValue)*(z - outputValue));
+            /*-----------------------------*/
             // CALCULATE UPDATE W2
             double[] updateW2 = new double[W2.getColumnDimension()];
             for(int i = 0; i < W2.getColumnDimension(); i++){
@@ -238,6 +239,7 @@ public class oracularTuring{
                     count++;
                 }
             }
+            /*-----------------------------*/
             // UPDATE
             Matrix MupdateW1 = new Matrix(updateW1).transpose();
             Matrix MupdateW2 = new Matrix(updateW2, 1);
@@ -253,6 +255,22 @@ public class oracularTuring{
         layers[1] = W2;
         return layers;
     }
+
+
+    /*
+     * What we are missing:
+     * - A function to run all the process of the neural net
+     *     - Select a candidate observation.
+     *     - Update weights.
+     *     - Evaluate performance.
+     * - Generate a Turing machine and a history of input
+     *   output pairs:
+     *     - Generate random Turing Machine
+     *     - Feed multiple inputs and outputs
+     * - Train Neural Network on contents of Turing machine
+     * - Add Trained Neural Network to Turing Machine (Run Net at each iter)
+     */
+
 
 
     /*
