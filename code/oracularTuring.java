@@ -196,13 +196,12 @@ public class oracularTuring{
             for(int i = 0; i < W2.getColumnDimension(); i++){
                 updateW2[i] = -y_new[i]*(outputValue - z)*(1 - z*z);
             }
-
             // CALCULATE UPDATE W1
             int count = 1;
             double[][] updateW1 = new double[W1.getColumnDimension()][W1.getRowDimension()];
             for(int i = 0; i < W1.getColumnDimension(); i++){
                 for(int j = 0; j < W1.getRowDimension(); j++){
-                    updateW1[i][j] = -(outputValue - z)*(1 - z*z)*W2.get(0, j)*(1 - y[j]*y_new[j])*x_new[i];
+                    updateW1[i][j] = -(outputValue - z)*(1 - z*z)*W2.get(0, j)*(1 - y_new[j]*y_new[j])*x_new[i];
                     count++;
                 }
             }
