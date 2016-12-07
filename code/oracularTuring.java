@@ -422,7 +422,7 @@ public class oracularTuring{
             double[] observation = new double[1];
             double auxObs  = (double)oracleTape[oraclePosition];
             observation[0] = auxObs;
-            nextValue      = (-1) * (int)runNet(layers, observation, 'l'); // NOTE: Only predicting with previous value!
+            nextValue      = randGen.nextInt(2)*randGen.nextInt(2);//(int)runNet(layers, observation, 'l'); // NOTE: Only predicting with previous value!
             if(oracleTape[oraclePosition] == 1 && nextValue == 1 ){
                 oracle_next_state = oracle_next_state*2;
             }else if(oracleTape[oraclePosition] == 1 && nextValue == 1){
@@ -451,7 +451,7 @@ public class oracularTuring{
                 System.out.println(oracleEncode[oracle_next_state + (i + 1)] + "" + oracleEncode[oracle_next_state + (i + 2)]);
             }
             // Start reading code
-            next_state = ((int)decode(state)) * 8;
+            next_state        = ((int)decode(state)) * 8;
             oracle_next_state = ((int)decode(oracleState)) * 8;
 
             if(verbose == true){
@@ -463,7 +463,7 @@ public class oracularTuring{
             oracleTape[oraclePosition] = oracleEncode[oracle_next_state + i + 1];
             if(verbose == true){
                 System.out.println("\n Wrote = " + tape[position]);
-                System.out.println("\n Oracle Wrote = " + oracleTape[position]);
+                System.out.println("\n Oracle Wrote = " + oracleTape[oraclePosition]);
             }
             // Move position.
             position       = position       + (int)Math.pow(-1, machineEncode[next_state + i + 2]);
@@ -520,7 +520,7 @@ public class oracularTuring{
         // Output Layer always 1
         widthLayer[nHLayers + 1] = 1;
         // Generate weights
-        int nObservations = 50; // This should be given by the Turing Machine.
+        int nObservations = 100; // This should be given by the Turing Machine.
         Matrix[] layers  = initW(nHLayers, widthLayer);
         double[] outputs = initX(nObservations, randGen);
         double[][] X     = initObs(nObservations, widthLayer[0], randGen);
@@ -531,6 +531,10 @@ public class oracularTuring{
         System.out.println("\nPlease enter the learning rate: ");
         double learningRate = Double.parseDouble(scanner.next());
         // Run Neural Net
+        System.out.println("-------------------------------------------");
+        System.out.println("---------------- TRAINING -----------------");
+        System.out.println("-------------------------------------------\n");
+
         Matrix[] outputLayers = execLearning(X, outputs, learningRate, nHLayers, widthLayer, randGen, TotEpochs);
         // Run Turing Machine
         popGeneration(randGen);
