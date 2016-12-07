@@ -328,6 +328,105 @@ public class oracularTuring{
      */
 
 
+    /*
+     * ---------------------------------------------------------------
+     * ---------------------- TURING MACHINE -------------------------
+     * ---------------------------------------------------------------
+     */
+
+    public static int[][] population = new int[1][1024]; // Length of Turing Machine
+
+    // Generate Turing Machine
+    public static void popGeneration(Random randGen){
+        for(int i = 0; i < population.length; i++){
+            for(int j = 0; j < population[0].length; j ++){
+                population[i][j] = randGen.nextInt(2);
+            }
+        }
+    }
+
+    public static double decode(int[] code){
+        double decode = 0;
+        for(int i = 0; i < code.length; i++){
+            decode = decode + code[i]*Math.pow(2,i);
+        }
+        return decode;
+    }
+
+    public static void printTape(int[] tape){
+        System.out.println("");
+        for(int i = 0; i < tape.length; i ++){
+            System.out.print(tape[i]);
+        }
+        System.out.println("");
+    }
+
+
+    public static int[] turingMachine(int maxIters, int nStates, int tapeLength, Random randGen, boolean verbose){
+        int[] machineEncode  = population[0];
+        int[] tape            = new int[tapeLength + 1];  // Tape.
+        int   position = (int) ((tapeLength + 1) / 2);  // Track position in tape.
+        Set<Integer> visitedStates = new HashSet<Integer>();
+        int   k        = 0;    // Operation counter
+        nStates = (int)(Math.log(nStates) / Math.log(2)); // pass to log 2
+        int[] state    = new int[nStates]; // state
+        int next_state = (int)decode(state);
+        if(verbose == true){
+            System.out.print("\n==================================================================");
+            System.out.print("\nMachine Simulation ");
+            System.out.println("\n==================================================================");
+        }
+        while(k < maxIters && position < tape.length && position > 1){
+            if(verbose == true){
+                System.out.println("\n ========================================= ");
+                System.out.println("\n Machine = [" + 0 +"]");
+                System.out.println("\n ITER = " + k);
+                System.out.println("\n Tape Position = " + position);
+                System.out.print("\n Current Instruction = [" + next_state/8  + "]: ");
+            }
+            if(tape[position] == 1){
+                next_state = next_state*2;
+            }
+            // Add visited states.
+            visitedStates.add(next_state);
+            int i = 0;
+            while(i < nStates){
+                state[i] = machineEncode[next_state + i];
+                i++;
+            }
+            if(verbose == true){
+                System.out.println(machineEncode[next_state + (i + 1)] + "" + machineEncode[next_state + (i + 2)]);
+            }
+            // Start reading code
+            next_state = ((int)decode(state)) * 8;
+
+            if(verbose == true){
+                System.out.println("\n Next State = " + next_state/8);
+            }
+            // Write in tape.
+            tape[position] = machineEncode[next_state + i + 1];
+            if(verbose == true){
+                System.out.println("\n Wrote = " + tape[position]);
+            }
+            // Move position.
+            position = position + (int)Math.pow(-1, machineEncode[next_state + i + 2]);
+            if(verbose == true){
+                System.out.println("\n Move = " + position);
+            }
+            // Increase counter.
+            k++;
+            if(verbose == true){
+                System.out.println("\n Tape: ");
+                printTape(tape);
+            }
+        }
+        /*if(visitedStates.size() < minVisitStates){
+            minVisitStates = visitedStates.size();
+        }
+        */
+        tape[0] = visitedStates.size();
+        return tape;
+    }
 
     /*
      * ---------------------------------------------
@@ -339,10 +438,13 @@ public class oracularTuring{
         System.out.println("===========================================");
         System.out.println("========== Oracle Turing Machine ==========");
         System.out.println("===========================================\n");
+        System.out.println("\n|-------------------------------------------|");
+        System.out.println("| NOTE: This network runs with two layers:  | \n| One hidden layer and an output layer.     | \n| Cybenko showed this is sufficient!        |");
+        System.out.println("|-------------------------------------------|\n");
         System.out.println("\nPlease enter a random seed: ");
         Random randGen   = new Random(Integer.parseInt(scanner.next()));
-        System.out.println("\nPlease enter the number of Hidden Layers of the Net: ");
-        int nHLayers     = Integer.parseInt(scanner.next()); // This are only the hidden layers
+        // System.out.println("\nPlease enter the number of Hidden Layers of the Net: ");
+        int nHLayers     = 1;//Integer.parseInt(scanner.next()); // This are only the hidden layers
         int[] widthLayer = new int[nHLayers + 2]; // This includes input
         // Fill in each layer.
         // INPUT LAYER
@@ -356,10 +458,10 @@ public class oracularTuring{
         // Output Layer always 1
         widthLayer[nHLayers + 1] = 1;
         // Generate weights
-        int nObservations = 10; // This should be given by the Turing Machine.
+        int nObservations = 50; // This should be given by the Turing Machine.
         Matrix[] layers  = initW(nHLayers, widthLayer);
         double[] outputs = initX(nObservations);
-        double[][] X       = initObs(nObservations, widthLayer[0]);
+        double[][] X     = initObs(nObservations, widthLayer[0]);
         // Get Tolerance
         System.out.println("\nPlease enter the maximum number of epochs: ");
         int TotEpochs = Integer.parseInt(scanner.next());
@@ -368,5 +470,8 @@ public class oracularTuring{
         double learningRate = Double.parseDouble(scanner.next());
         // Run Neural Net
         execLearning(X, outputs, learningRate, nHLayers, widthLayer, randGen, TotEpochs);
+        // Run Turing Machine
+        popGeneration(randGen);
+        turingMachine(100, 64, 100, randGen, true);
     }
 }
