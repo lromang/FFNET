@@ -239,7 +239,7 @@ public class oracularTuring{
         double[] x_new = addBias(x);
         double[] y_new = addBias(y);
         for(int k = 0; k < ToL; k++){
-            System.out.println("|pred - val|^2 = " + (z - outputValue)*(z - outputValue));
+            // System.out.println("|pred - val|^2 = " + (z - outputValue)*(z - outputValue));
             /*-----------------------------*/
             // CALCULATE UPDATE W2
             double[] updateW2 = new double[W2.getColumnDimension()];
@@ -285,22 +285,22 @@ public class oracularTuring{
     // Execute all the pipeline
     private static Matrix[] execLearning(double[][] X, double[] outputs, double learningRate, int nHLayers, int[] widthLayer, Random randGen, int TotEpochs){
         int obs;
-        int ToL;
+        // int ToL;
         int epochs = 0;
         double [] x;
         Set<Integer> totalObs = new HashSet<Integer>();
         // Initial Weights
         Matrix[] layers  = initW(nHLayers, widthLayer);
         // Initial Evaluation
-        double objective = runAllNet(outputs, layers, X);
-        ToL  = (int)Math.sqrt(objective);
+        double objective = runAllNet(outputs, layers, X, 't');
+        // ToL  = (int)Math.sqrt(objective);
         System.out.println("sumSquares = " + objective + " | epoch = " + epochs);
-        while(objective > ToL && epochs < TotEpochs){
-            obs = showRandomInteger(0, (X[0].length - 1), randGen);
+        while(epochs < TotEpochs){
+            obs = showRandomInteger(0, (outputs.length - 1), randGen);
             x   = X[obs];
             // Run Back Propagation
             layers    = runNetBackProp(layers, x, 1, 1, learningRate);
-            objective = runAllNet(outputs, layers, X);
+            objective = runAllNet(outputs, layers, X, 't');
             // Add state to observed states
             totalObs.add(obs);
             // If epoch completed
@@ -356,7 +356,7 @@ public class oracularTuring{
         // Output Layer always 1
         widthLayer[nHLayers + 1] = 1;
         // Generate weights
-        int nObservations = 1000; // This should be given by the Turing Machine.
+        int nObservations = 10; // This should be given by the Turing Machine.
         Matrix[] layers  = initW(nHLayers, widthLayer);
         double[] outputs = initX(nObservations);
         double[][] X       = initObs(nObservations, widthLayer[0]);
