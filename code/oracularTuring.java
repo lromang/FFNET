@@ -187,33 +187,35 @@ public class oracularTuring{
         Matrix  W2 = layers[1];
         double[] y = hiddLayer(W1.getArray(),  x, 'l');
         double   z = outputLayer(W2.getArray(), y, 'l');
-        x          = addBias(x);
+        double[] x_new = addBias(x);
+        double[] y_new = addBias(y);
         for(int k = 0; k < ToL; k++){
             System.out.println("|pred - val|^2 = " + (z - outputValue)*(z - outputValue));
             // CALCULATE UPDATE W2
-            double[] updateW2 = new double[W2.getRowDimension()];
-            for(int i = 0; i < W2.getRowDimension(); i++){
-                updateW2[i] = -y[i]*(outputValue - z)*(1 - z*z);
+            double[] updateW2 = new double[W2.getColumnDimension()];
+            for(int i = 0; i < W2.getColumnDimension(); i++){
+                updateW2[i] = -y_new[i]*(outputValue - z)*(1 - z*z);
             }
+
             // CALCULATE UPDATE W1
             int count = 1;
             double[][] updateW1 = new double[W1.getColumnDimension()][W1.getRowDimension()];
             for(int i = 0; i < W1.getColumnDimension(); i++){
                 for(int j = 0; j < W1.getRowDimension(); j++){
-                    updateW1[i][j] = -(outputValue - z)*(1 - z*z)*W2.get(0, j)*(1 - y[j]*y[j])*x[i];
+                    updateW1[i][j] = -(outputValue - z)*(1 - z*z)*W2.get(0, j)*(1 - y[j]*y_new[j])*x_new[i];
                     count++;
                 }
             }
             // UPDATE
-            Matrix MupdateW2 = new Matrix(updateW2, 1);
             Matrix MupdateW1 = new Matrix(updateW1).transpose();
+            Matrix MupdateW2 = new Matrix(updateW2, 1);
             W1.plusEquals(MupdateW1);
-            System.out.println("Safe");
             W2.plusEquals(MupdateW2);
-
             // Recalculate inner values.
             y = hiddLayer(W1.getArray(),  x, 'l');
             z = outputLayer(W2.getArray(), y, 'l');
+            // Add bias
+            y_new = addBias(y);
         }
         layers[0] = W1;
         layers[1] = W2;
