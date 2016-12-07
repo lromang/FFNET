@@ -30,6 +30,7 @@ public class oracularTuring{
      * public static int[] widthLayer = {3, 5, 7, 4, 1}; // Includes input and output layer
     */
 
+
     /*
      * ---------------------------------------------
      * Generate initial weights
@@ -59,6 +60,21 @@ public class oracularTuring{
         return x;
     }
 
+    /*
+     * ---------------------------------------------
+     * Generate initial observation (Should be
+     * provided by Turing's Machine history)
+     * ---------------------------------------------
+     * x = observation
+     */
+    private static double[][] initObs(int totObs, int inputLayerDim){
+        double[][] X = new double[totObs][inputLayerDim];
+        for(int i = 0; i < totObs; i++){
+            for(int j = 0; j < inputLayerDim; j++)
+            X[i][j]  = Math.random();
+        }
+        return X;
+    }
 
     /*
      * ---------------------------------------------
@@ -182,10 +198,10 @@ public class oracularTuring{
      * layers = array of layer's weights
      * x      = observation
      */
-    private static double[] runAllNet(double[] output, Matrix[] layers, double[][] x, char activation){
-        double[] resNet = new double[x[0].length];
-        for(int i = 0; i < resNet.length; i++){
-            resNet[i] = (output[i] - runNet(layers, x[i], activation))*(output[i] - runNet(layers, x[i], activation));
+    private static double runAllNet(double[] output, Matrix[] layers, double[][] x, char activation){
+        double resNet = 0;
+        for(int i = 0; i < output.length; i++){
+            resNet = resNet + (output[i] - runNet(layers, x[i], activation))*(output[i] - runNet(layers, x[i], activation));
         }
         return resNet;
     }
@@ -199,8 +215,8 @@ public class oracularTuring{
      * layers = array of layer's weights
      * x      = observation
      */
-    private static double[] runAllNet(Matrix[] layers, double[][] x){
-        return runAllNet(layers, x, 'l');
+    private static double runAllNet(double[] output, Matrix[] layers, double[][] x){
+        return runAllNet(output, layers, x, 'l');
     }
 
     /*
@@ -257,6 +273,46 @@ public class oracularTuring{
     }
 
 
+    // Random integer generation
+    private static int showRandomInteger(int aStart, int aEnd, Random aRandom){
+        long range       = (long)aEnd - (long)aStart + 1;
+        long fraction    = (long)(range * aRandom.nextDouble());
+        int randomNumber = (int)(fraction + aStart);
+        return randomNumber;
+    }
+
+
+    // Execute all the pipeline
+    private static Matrix[] execLearning(double[][] X, double[] outputs, double learningRate, int nHLayers, int[] widthLayer, Random randGen, int TotEpochs){
+        int obs;
+        int ToL;
+        int epochs = 0;
+        double [] x;
+        Set<Integer> totalObs = new HashSet<Integer>();
+        // Initial Weights
+        Matrix[] layers  = initW(nHLayers, widthLayer);
+        // Initial Evaluation
+        double objective = runAllNet(outputs, layers, X);
+        ToL  = (int)Math.sqrt(objective);
+        System.out.println("sumSquares = " + objective + " | epoch = " + epochs);
+        while(objective > ToL && epochs < TotEpochs){
+            obs = showRandomInteger(0, (X[0].length - 1), randGen);
+            x   = X[obs];
+            // Run Back Propagation
+            layers    = runNetBackProp(layers, x, 1, 1, learningRate);
+            objective = runAllNet(outputs, layers, X);
+            // Add state to observed states
+            totalObs.add(obs);
+            // If epoch completed
+            if(totalObs.size() == outputs.length){
+                epochs++;
+                System.out.println("sumSquares = " + objective + " | epoch = " + epochs);
+                totalObs.clear();
+            }
+        }
+        return layers;
+    }
+
     /*
      * What we are missing:
      * - A function to run all the process of the neural net
@@ -283,6 +339,8 @@ public class oracularTuring{
         System.out.println("===========================================");
         System.out.println("========== Oracle Turing Machine ==========");
         System.out.println("===========================================\n");
+        System.out.println("\nPlease enter a random seed: ");
+        Random randGen   = new Random(Integer.parseInt(scanner.next()));
         System.out.println("\nPlease enter the number of Hidden Layers of the Net: ");
         int nHLayers     = Integer.parseInt(scanner.next()); // This are only the hidden layers
         int[] widthLayer = new int[nHLayers + 2]; // This includes input
@@ -298,15 +356,17 @@ public class oracularTuring{
         // Output Layer always 1
         widthLayer[nHLayers + 1] = 1;
         // Generate weights
-        Matrix[] layers = initW(nHLayers, widthLayer);
-        double[] x      = initX(widthLayer[0]);
+        int nObservations = 1000; // This should be given by the Turing Machine.
+        Matrix[] layers  = initW(nHLayers, widthLayer);
+        double[] outputs = initX(nObservations);
+        double[][] X       = initObs(nObservations, widthLayer[0]);
         // Get Tolerance
-        System.out.println("\nPlease enter the maximum number of iterations: ");
-        int ToL = Integer.parseInt(scanner.next());
+        System.out.println("\nPlease enter the maximum number of epochs: ");
+        int TotEpochs = Integer.parseInt(scanner.next());
         // Get learning rate
         System.out.println("\nPlease enter the learning rate: ");
         double learningRate = Double.parseDouble(scanner.next());
         // Run Neural Net
-        runNetBackProp(layers, x, ToL, 1, learningRate);
+        execLearning(X, outputs, learningRate, nHLayers, widthLayer, randGen, TotEpochs);
     }
 }
