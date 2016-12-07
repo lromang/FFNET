@@ -182,7 +182,7 @@ public class oracularTuring{
      * layers = array of layer's weights
      * x      = observation
      */
-    private static Matrix[] runNetBackProp(Matrix[] layers, double[] x, int ToL, double outputValue){
+    private static Matrix[] runNetBackProp(Matrix[] layers, double[] x, int ToL, double outputValue, double learnRate){
         Matrix  W1 = layers[0];
         Matrix  W2 = layers[1];
         double[] y = hiddLayer(W1.getArray(),  x, 'l');
@@ -194,14 +194,14 @@ public class oracularTuring{
             // CALCULATE UPDATE W2
             double[] updateW2 = new double[W2.getColumnDimension()];
             for(int i = 0; i < W2.getColumnDimension(); i++){
-                updateW2[i] = -y_new[i]*(outputValue - z)*(1 - z*z);
+                updateW2[i] = -learnRate*y_new[i]*(outputValue - z)*(1 - z*z);
             }
             // CALCULATE UPDATE W1
             int count = 1;
             double[][] updateW1 = new double[W1.getColumnDimension()][W1.getRowDimension()];
             for(int i = 0; i < W1.getColumnDimension(); i++){
                 for(int j = 0; j < W1.getRowDimension(); j++){
-                    updateW1[i][j] = -(outputValue - z)*(1 - z*z)*W2.get(0, j)*(1 - y_new[j]*y_new[j])*x_new[i];
+                    updateW1[i][j] = -learnRate*(outputValue - z)*(1 - z * z)*W2.get(0, j)*(1 - y_new[j]*y_new[j])*x_new[i];
                     count++;
                 }
             }
@@ -249,9 +249,13 @@ public class oracularTuring{
         // Generate weights
         Matrix[] layers = initW(nHLayers, widthLayer);
         double[] x      = initX(widthLayer[0]);
-        // Run Back Propagation
+        // Get Tolerance
         System.out.println("\nPlease enter the maximum number of iterations: ");
         int ToL = Integer.parseInt(scanner.next());
-        runNetBackProp(layers, x, ToL, 1);
+        // Get learning rate
+        System.out.println("\nPlease enter the learning rate: ");
+        double learningRate = Double.parseDouble(scanner.next());
+        // Run Neural Net
+        runNetBackProp(layers, x, ToL, 1, learningRate);
     }
 }
