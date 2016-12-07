@@ -176,11 +176,44 @@ public class oracularTuring{
 
     /*
      * ---------------------------------------------
+     * Run the neural net activation option on all
+     * of the dataset.
+     * ---------------------------------------------
+     * layers = array of layer's weights
+     * x      = observation
+     */
+    private static double[] runAllNet(Matrix[] layers, double[][] x, char activation){
+        double[] resNet = new double[x[0].length];
+        for(int i = 0; i < resNet.length; i++){
+            resNet[i] = runNet(layers, x[i], activation);
+        }
+        return resNet;
+    }
+
+
+    /*
+     * ---------------------------------------------
+     * Run the neural net default logistic on all
+     * of the dataset.
+     * ---------------------------------------------
+     * layers = array of layer's weights
+     * x      = observation
+     */
+    private static double[] runAllNet(Matrix[] layers, double[][] x){
+        return runAllNet(layers, x, 'l');
+    }
+
+    /*
+     * ---------------------------------------------
      * Run the neural net default logistic (Only works
      * for two layered Neural Network).
      * ---------------------------------------------
      * layers = array of layer's weights
      * x      = observation
+     * OBSERVATION: In order to make it batch gradient
+     * descent, I need to sum over the delta over all
+     * the observations or M observations for M batch
+     * size.
      */
     private static Matrix[] runNetBackProp(Matrix[] layers, double[] x, int ToL, double outputValue, double learnRate){
         Matrix  W1 = layers[0];
