@@ -37,8 +37,8 @@ public class oracularTuring{
      * x = observation
      */
     private static Matrix[] initW(int nHLayers, int[] widthLayer){
-        Matrix[] layerWeights = new Matrix[nHLayers];
-        for(int i = 0; i < nHLayers; i++){
+        Matrix[] layerWeights = new Matrix[nHLayers + 1];
+        for(int i = 0; i < (nHLayers + 1); i++){
             layerWeights[i] = Matrix.random(widthLayer[i + 1], widthLayer[i] + 1);
         }
         return layerWeights;
@@ -150,7 +150,9 @@ public class oracularTuring{
      * x      = observation
      */
     private static double runNet(Matrix[] layers, double[] x, char activation){
+        // Layers[0] must be the weight matrix for the input vector.
         double[] hiddenOutput = hiddLayer(layers[0].getArray(), x, activation);
+        // layers.length - 2 must be the number of hidden layers.
         for(int i = 1; i < (layers.length - 1); i++){
             hiddenOutput = hiddLayer(layers[i].getArray(), hiddenOutput, activation);
         }
@@ -183,20 +185,19 @@ public class oracularTuring{
         System.out.println("========== Oracle Turing Machine ==========");
         System.out.println("===========================================\n");
         System.out.println("\nPlease enter the number of Hidden Layers of the Net: ");
-        int nHLayers     = Integer.parseInt(scanner.next());
-        int[] widthLayer = new int[nHLayers + 2];
+        int nHLayers     = Integer.parseInt(scanner.next()); // This are only the hidden layers
+        int[] widthLayer = new int[nHLayers + 2]; // This includes input
         // Fill in each layer.
         // INPUT LAYER
         System.out.println("\nPlease enter dimension of the input  layer: ");
         widthLayer[0] =  Integer.parseInt(scanner.next());
         // HIDDEN LAYERS
-        for(int i = 1; i < nHLayers; i++){
+        for(int i = 1; i < (nHLayers + 1); i++){
             System.out.println("\nPlease enter dimension of the hidden layer " + i + " :");
             widthLayer[i] =  Integer.parseInt(scanner.next());
         }
         // Output Layer always 1
-        widthLayer[nHLayers] = 1;
-
+        widthLayer[nHLayers + 1] = 1;
         // Generate weights
         Matrix[] layers = initW(nHLayers, widthLayer);
         double[] x      = initX(widthLayer[0]);
