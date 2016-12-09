@@ -425,7 +425,9 @@ public class oracularTuring{
             double[] observation = new double[1];
             double auxObs  = (double)oracleTape[oraclePosition];
             observation[0] = auxObs;
-            nextValue      = (int)runNet(layers, observation, 'l'); // NOTE: Only predicting with previous value! randGen.nextInt(2)*randGen.nextInt(2);
+            // System.out.println("Prediction =" + runNet(layers, observation, 't'));
+
+            nextValue      = (int)(runNet(layers, observation, 't')); // NOTE: Only predicting with previous value! randGen.nextInt(2)*randGen.nextInt(2);
             if(oracleTape[oraclePosition] == 1 && nextValue == 1 ){
                 oracle_next_state = oracle_next_state*2;
             }else if(oracleTape[oraclePosition] == 1 && nextValue == 1){
@@ -449,7 +451,7 @@ public class oracularTuring{
             if(verbose == true){
                 System.out.println(machineEncode[next_state + (i + 1)] + "" + machineEncode[next_state + (i + 2)]);
                 System.out.println("\n Oracle Tape Position = " + oraclePosition);
-                System.out.println("\n Oracle Tape Predicted value = " + nextValue);
+                //System.out.println("\n Oracle Tape Predicted value = " + nextValue);
                 System.out.print("\n Oracle Current Instruction = [" + oracle_next_state/8  + "]: ");
                 System.out.println(oracleEncode[oracle_next_state + (i + 1)] + "" + oracleEncode[oracle_next_state + (i + 2)]);
             }
