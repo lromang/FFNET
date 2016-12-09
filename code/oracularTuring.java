@@ -285,6 +285,7 @@ public class oracularTuring{
     // Execute all the pipeline
     private static Matrix[] execLearning(double[][] X, double[] outputs, double learningRate, int nHLayers, int[] widthLayer, Random randGen, int TotEpochs){
         int obs;
+        double output;
         // int ToL;
         int epochs = 0;
         double [] x;
@@ -296,12 +297,14 @@ public class oracularTuring{
         double auxObjective = objective;
         // ToL  = (int)Math.sqrt(objective);
         System.out.println("sumSquares = " + objective + " | epoch = " + epochs);
-        while(epochs < TotEpochs && auxObjective >= objective){
+        while(epochs < TotEpochs){// && auxObjective >= objective){
             auxObjective = objective;
             obs = showRandomInteger(0, (outputs.length - 1), randGen);
             x   = X[obs];
+            output = outputs[obs];
+            // System.out.println("output = " + output);
             // Run Back Propagation
-            layers    = runNetBackProp(layers, x, 1, 1, learningRate);
+            layers    = runNetBackProp(layers, x, 1, output, learningRate);
             objective = runAllNet(outputs, layers, X, 't');
             // Add state to observed states
             totalObs.add(obs);
@@ -422,7 +425,7 @@ public class oracularTuring{
             double[] observation = new double[1];
             double auxObs  = (double)oracleTape[oraclePosition];
             observation[0] = auxObs;
-            nextValue      = randGen.nextInt(2)*randGen.nextInt(2);//(int)runNet(layers, observation, 'l'); // NOTE: Only predicting with previous value!
+            nextValue      = (int)runNet(layers, observation, 'l'); // NOTE: Only predicting with previous value! randGen.nextInt(2)*randGen.nextInt(2);
             if(oracleTape[oraclePosition] == 1 && nextValue == 1 ){
                 oracle_next_state = oracle_next_state*2;
             }else if(oracleTape[oraclePosition] == 1 && nextValue == 1){
